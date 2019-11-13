@@ -35,6 +35,7 @@ def led_trigger(compass):
                 continue
             gpio.output(k, False)
             time.sleep(.1)
+    gpio.cleanup()
 
 
 class LiveFeed:
@@ -72,45 +73,49 @@ def monitor(station_list, direction, q):
     temp_suspend = []
     time_delay = []
     while True:
-        tstart = time.time()
-        real_time = datetime.datetime.now()
-        station_list.sort() # sort stations alphabetically
-        upcoming_trains = Scheduler(station_list).get_feed()
-        queue_trains = []
-        time_comp = lambda x, y: (x.hour, x.minute, x.second) > (y.hour, y.minute, y.second)
-        for station, details in upcoming_trains:
-            for item in details:
-                for estimate in item['estimate']:
-                    if estimate['direction'] == direction[station][0]:
-                        queue_trains.append((station, estimate))
-                        break
-        if temp_suspend != []:
-            for i in temp_suspend:
-                if time_comp(real_time, i[1]):
-                    temp_suspend.remove(i)
-
-        for station, train in queue_trains:
-            _exit = 0
-            if len(temp_suspend) != 0:
-                for detail, _time in temp_suspend:
-                    if train == detail:
-                        _exit = 1
-            if _exit == 1:
-                continue
-            if train['minutes'] == 'Leaving':
-                time_delay.append((train['direction'], real_time +
-                                   datetime.timedelta(0, direction[station][1])))
-                temp_suspend.append((train, real_time + datetime.timedelta(0, 120)))
         try:
-            for sched in time_delay:
-                if time_comp(real_time, sched[1]):
-                    q.put(sched[0])
-                    time_delay.remove(sched)
-        except IndexError:
-            pass
-        tend = time.time()
-        if 1-(tend-tstart) > 0:
-            time.sleep(1-(tend-tstart))# try to give a one second query freq, abs if < 0
+            tstart = time.time()
+            real_time = datetime.datetime.now()
+            station_list.sort() # sort stations alphabetically
+            upcoming_trains = Scheduler(station_list).get_feed()
+            queue_trains = []
+            time_comp = lambda x, y: (x.hour, x.minute, x.second) > (y.hour, y.minute, y.second)
+            for station, details in upcoming_trains:
+                for item in details:
+                    for estimate in item['estimate']:
+                        if estimate['direction'] == direction[station][0]:
+                            queue_trains.append((station, estimate))
+                            break
+            if temp_suspend != []:
+                for i in temp_suspend:
+                    if time_comp(real_time, i[1]):
+                        temp_suspend.remove(i)
+
+            for station, train in queue_trains:
+                _exit = 0
+                if len(temp_suspend) != 0:
+                    for detail, _time in temp_suspend:
+                        if train == detail:
+                            _exit = 1
+                if _exit == 1:
+                    continue
+                if train['minutes'] == 'Leaving':
+                    time_delay.append((train['direction'], real_time +
+                                    datetime.timedelta(0, direction[station][1])))
+                    temp_suspend.append((train, real_time + datetime.timedelta(0, 120)))
+            try:
+                for sched in time_delay:
+                    if time_comp(real_time, sched[1]):
+                        q.put(sched[0])
+                        time_delay.remove(sched)
+            except IndexError:
+                pass
+            tend = time.time()
+            if 1-(tend-tstart) > 0:
+                time.sleep(1-(tend-tstart)) # try to give a one second query freq, abs if < 0
+        except (RuntimeError, KeyError) as error:
+            print("{}. Retrying...".format(error))
+            time.sleep(5)
 
 
 def listener(q):  # task to queue information into a manager dictionary
@@ -133,7 +138,7 @@ def main():
     pool = mp.Pool(2) # two processes - one for checking time, one for blinking led
     watcher = pool.apply_async(listener, (q,)) # first process
     station_list = ['nbrk', 'plza'] # mutually exclusive stations for direction
-    direction = {'nbrk':['North', 85], 'plza':['South', 140]}
+    direction = {'nbrk': ['North', 85], 'plza': ['South', 140]}
     job = pool.apply_async(monitor, (station_list, direction, q)) # second multiprocess
     job.get()
     pool.close()
