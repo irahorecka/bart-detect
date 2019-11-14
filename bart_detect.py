@@ -10,8 +10,6 @@ import multiprocessing as mp
 from pybart.api import BART
 import RPi.GPIO as gpio
 bart = BART(json_format=True)
-gpio.setmode(gpio.BCM)
-gpio.setwarnings(False)
 
 
 def led_trigger(compass):
@@ -20,6 +18,8 @@ def led_trigger(compass):
     The function takes a str cardinal direction
     as its argument.
     """
+    gpio.setmode(gpio.BCM)
+    gpio.setwarnings(False)
     led_dir = [27, 23, 17, 18]
     led_dir = led_dir if compass.lower() == 'south' else led_dir[::-1]
     for i in led_dir:
