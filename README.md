@@ -5,15 +5,15 @@ The setup is currently running on **Raspberry Pi 3 Model B+** using **Python 3.5
 
 The approach is simple: BART has a transparent API that transmits a myriad of information. I monitor live updates of when the next train is leaving from two stations: El Cerrito Plaza and North Berkeley. Through trial and error, I deduced a latency between when the train departs and when it passes my house. In combination, this accurately triggers the LED lights to notify me of an incoming train. <br><br>
 
-**Python Setup** <br>
+## **Python Setup** <br>
 This script requires Python 3.5 and above - make sure your Raspberry Pi OS can support Python 3.5. Please look at requirements.txt for required Python libraries. Clone this repository onto your Raspberry Pi and use pip to install the necessary libraries, like this:<br><br>
 ```pip3 install -r requirements.txt``` <br><br>
 To run the scipt, type this into the terminal of your Raspberry Pi (I have a Raspberry Pi 3B+):<br><br>
 ```python3 bart_detect.py```<br><br>
 This script will run indefinitely until interrupted. To interrupt the script, press *CTRL + C* in your running terminal.<br><br>
 
-**Raspberry Pi GPIO** <br>
-How to set up your breadboard with LED lights: <br>
+## **Raspberry Pi GPIO** <br>
+### How to set up your breadboard with LED lights: <br>
 The basics: <a href="https://www.youtube.com/watch?v=BWYy3qZ315U">How to set up an LED light using your Raspberry Pi </a><br>
 A slightly more elborate LED setup: <br>
 <p align = 'center'>
