@@ -8,34 +8,49 @@ import datetime
 import time
 import multiprocessing as mp
 from pybart.api import BART
-import RPi.GPIO as gpio
+#import RPi.GPIO as gpio
+#from RPLCD import CharLCD
 bart = BART(json_format=True)
 
 
-def led_trigger(compass):
-    """
-    A function to start LED sequence.
-    The function takes a str cardinal direction
-    as its argument.
-    """
-    gpio.setmode(gpio.BCM)
-    gpio.setwarnings(False)
-    led_dir = [27, 23, 17, 18]
-    led_dir = led_dir if compass.lower() == 'south' else led_dir[::-1]
-    for i in led_dir:
-        gpio.setup(i, gpio.OUT)
-    for i in range(35): # number of flashes
-        for index, j in enumerate(led_dir):
-            gpio.output(j, True)
-            if index == 3:
-                gpio.output(led_dir[0], False)
-            time.sleep(.1)
-        for index, k in enumerate(led_dir):
-            if index == 0:
-                continue
-            gpio.output(k, False)
-            time.sleep(.1)
-    gpio.cleanup()
+class Display:
+    def __init__(self, compass, station):
+        self.compass = compass
+        self.station = station
+
+    def lcd_trigger(self):
+        rs_val = 25
+        e_val = 24
+        d_list = [23, 17, 18, 22]
+        rows = 2
+        cols = 16
+        lcd = CharLCD(cols, rows, rs_val, e_val, d_list)
+        lcd.write_string(u'Hello world!')
+
+    def led_trigger(self):
+        """
+        A function to start LED sequence.
+        The function takes a str cardinal direction
+        as its argument.
+        """
+        gpio.setmode(gpio.BCM)
+        gpio.setwarnings(False)
+        led_dir = [27, 23, 17, 18]
+        led_dir = led_dir if self.compass.lower() == 'south' else led_dir[::-1]
+        for i in led_dir:
+            gpio.setup(i, gpio.OUT)
+        for i in range(35): # number of flashes
+            for index, j in enumerate(led_dir):
+                gpio.output(j, True)
+                if index == 3:
+                    gpio.output(led_dir[0], False)
+                time.sleep(.1)
+            for index, k in enumerate(led_dir):
+                if index == 0:
+                    continue
+                gpio.output(k, False)
+                time.sleep(.1)
+        gpio.cleanup()
 
 
 class LiveFeed:
@@ -93,6 +108,7 @@ def monitor(direction, q):
                         temp_suspend.remove(i)
 
             for station, train in queue_trains:
+                print(station, train)
                 _exit = 0
                 if len(temp_suspend) != 0:
                     for detail, _time in temp_suspend:
@@ -107,7 +123,7 @@ def monitor(direction, q):
             try:
                 for sched in time_delay:
                     if time_comp(real_time, sched[1]):
-                        q.put(sched[0])
+                        q.put((sched[0], train))
                         time_delay.remove(sched)
             except IndexError:
                 pass
