@@ -6,11 +6,11 @@ The setup is currently running on **Raspberry Pi 3 Model B+** using **Python 3.5
 The approach is simple: BART has a transparent API that transmits a myriad of information. I monitor live updates of when the next train is leaving from two stations: El Cerrito Plaza and North Berkeley. Through trial and error, I deduced a latency between when the train departs and when it passes my house. In combination, this accurately triggers the LED lights to notify me of an incoming train. <br><br>
 
 **Python Setup** <br>
-This script requires Python 3.5 and above - make sure your Raspberry Pi OS can support Python 3.5. Please look at requirements.txt for required packages. Clone this repository onto your Raspberry Pi and use pip to install the necessary packages, like this:<br>
-```pip3 install -r requirements.txt``` <br>
-To run the scipt, type this into the terminal of your Raspberry Pi (I have a Raspberry Pi 3B+):<br>
-```python3 bart_detect.py```<br>
-This script will run indefinitely until interrupted, which is usually accomplished via pressing *CTRL + C* in the running terminal.<br><br>
+This script requires Python 3.5 and above - make sure your Raspberry Pi OS can support Python 3.5. Please look at requirements.txt for required Python libraries. Clone this repository onto your Raspberry Pi and use pip to install the necessary libraries, like this:<br><br>
+```pip3 install -r requirements.txt``` <br><br>
+To run the scipt, type this into the terminal of your Raspberry Pi (I have a Raspberry Pi 3B+):<br><br>
+```python3 bart_detect.py```<br><br>
+This script will run indefinitely until interrupted. To interrupt the script, press *CTRL + C* in your running terminal.<br><br>
 
 **Raspberry Pi GPIO** <br>
 How to set up your breadboard with LED lights: <br>
@@ -23,6 +23,6 @@ Finally, my simple LED setup:<br>
 <p align = 'center'>
 <img src="https://i.imgur.com/T5WDI7C.jpg" alt="4 LED setup on breadboard" width="500" height="450">
 </p><br>
-Please let me know if you have any questions! You are free to change BART stations to your liking. Message me if you have any questons or concerns, and we can work together to set this up!<br>
+Please let me know if you have any questions! You are free to change BART stations to your preference, just make sure you have the correct station keys. Message me if you have any questons and we can work together to set this up!<br><br>
 
 **Fin**
