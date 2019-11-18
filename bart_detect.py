@@ -9,7 +9,7 @@ import time
 import multiprocessing as mp
 import os
 from pybart.api import BART
-import visual_display as vd
+#import visual_display as vd
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 BART = BART(json_format=True)
 
@@ -53,6 +53,7 @@ def monitor(direction, q):
     """
     temp_suspend = []
     time_delay = []
+    print(direction)
     while True:
         try:
             tstart = time.time()
@@ -83,7 +84,7 @@ def monitor(direction, q):
                     continue
                 if train['minutes'] == 'Leaving':
                     time_delay.append((station, destination, train, real_time +
-                                    datetime.timedelta(0, direction[station][2])))
+                                    datetime.timedelta(0, direction[station][1])))
                     temp_suspend.append((train, real_time + datetime.timedelta(0, 120)))
             try:
                 for sched in time_delay:
