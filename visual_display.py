@@ -109,8 +109,8 @@ class LCD:
         try:
             no_cars = int(no_cars)
             for i in range(self.rep):
-                self.lcd_string("{}".format(self.stations), self.LCD_LINE_1)
                 self.lcd_string("Approaching", self.LCD_LINE_2)
+                self.lcd_string("{}".format(self.stations), self.LCD_LINE_1)
                 time.sleep(2)
 
                 self.lcd_string("{}".format(line.title()), self.LCD_LINE_1)
