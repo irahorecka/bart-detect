@@ -20,7 +20,7 @@ class Station:
     as station name.
     """
     train_stations = {'nbrk': 'North Berkeley',
-                      'plza': 'El Cerrito Plza'
+                      'plza': 'El Cerrito Plaza'
                       }
 
 
@@ -118,7 +118,7 @@ def listener(q):  # task to queue information into a manager dictionary
         get_set = q.get()
         compass, station, line, no_cars = get_set
         station = Station.train_stations[station]
-        lcd_disp = vd.LCD(station, 10)
+        lcd_disp = vd.LCD(station, 5)
         lcd_disp.train_detail(line, no_cars)
         # led_disp = vd.LED(compass)
         # led_disp.led_lights()
