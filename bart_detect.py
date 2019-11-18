@@ -81,7 +81,6 @@ def monitor(direction, q):
                             _exit = 1
                 if _exit == 1:
                     continue
-                print(station, destination, train)
                 if train['minutes'] == 'Leaving':
                     time_delay.append((station, destination, train, real_time +
                                     datetime.timedelta(0, direction[station][2])))
