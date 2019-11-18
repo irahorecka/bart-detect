@@ -114,7 +114,7 @@ class LCD:
                 time.sleep(2)
 
                 self.lcd_string("{}".format(line.title()), self.LCD_LINE_1)
-                self.lcd_string("{}".format(no_cars), self.LCD_LINE_2)
+                self.lcd_string("{} car train".format(no_cars), self.LCD_LINE_2)
                 time.sleep(2)
         except Exception as error:
             print(error)
