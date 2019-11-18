@@ -53,7 +53,6 @@ def monitor(direction, q):
     """
     temp_suspend = []
     time_delay = []
-    print(direction)
     while True:
         try:
             tstart = time.time()
@@ -89,7 +88,7 @@ def monitor(direction, q):
             try:
                 for sched in time_delay:
                     if time_comp(real_time, sched[3]):
-                        q.put(sched[2]['direction'], sched[0], sched[1], sched[2]['length'])
+                        q.put((sched[2]['direction'], sched[0], sched[1], sched[2]['length']))
                         time_delay.remove(sched)
             except IndexError:
                 pass
@@ -107,7 +106,8 @@ def listener(q):  # task to queue information into a manager dictionary
     listener is key to not disrupting the BART monitoring process.
     """
     while True:
-        compass, station, line, no_cars = q.get()
+        get_set = q.get()
+        compass, station, line, no_cars = get_set
         station = Station.train_stations[station]
         lcd_disp = vd.LCD(station, 10)
         lcd_disp.train_detail(line, no_cars)
