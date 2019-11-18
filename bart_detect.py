@@ -71,22 +71,20 @@ def monitor(direction, q):
             upcoming_trains = Scheduler(station_list).get_feed()
             queue_trains = []
             time_comp = lambda x, y: (x.hour, x.minute, x.second) > (y.hour, y.minute, y.second)
+
             for station, details in upcoming_trains:
                 for item in details:
                     for estimate in item['estimate']:
                         if estimate['direction'] == direction[station][0]:
                             queue_trains.append((station, item['destination'], estimate))
                             break
-            if temp_suspend:
-                for i in temp_suspend:
-                    if time_comp(real_time, i[1]):
-                        temp_suspend.remove(i)
-
             for station, destination, train in queue_trains:
                 _exit = 0
                 if temp_suspend:
                     for detail, _time in temp_suspend:
-                        if train == detail:
+                        if time_comp(real_time, _time):
+                            temp_suspend.remove((detail, _time))
+                        elif train == detail:
                             _exit = 1
                 if _exit == 1:
                     continue
