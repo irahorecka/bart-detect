@@ -107,17 +107,15 @@ class LCD:
 
     def train_detail(self, line, no_cars):
         try:
-            if not isinstance(no_cars, int):
-                raise TypeError("no_cars must be of type int.")
-            else:
-                for i in self.rep:
-                    self.lcd_string("{}".format(self.stations), self.LCD_LINE_1)
-                    self.lcd_string("Approaching", self.LCD_LINE_2)
-                    time.sleep(2)
+            no_cars = int(no_cars)
+            for i in self.rep:
+                self.lcd_string("{}".format(self.stations), self.LCD_LINE_1)
+                self.lcd_string("Approaching", self.LCD_LINE_2)
+                time.sleep(2)
 
-                    self.lcd_string("{}".format(line.title()), self.LCD_LINE_1)
-                    self.lcd_string("{}".format(no_cars), self.LCD_LINE_2)
-                    time.sleep(2)
+                self.lcd_string("{}".format(line.title()), self.LCD_LINE_1)
+                self.lcd_string("{}".format(no_cars), self.LCD_LINE_2)
+                time.sleep(2)
         except Exception as error:
             print(error)
         finally:
