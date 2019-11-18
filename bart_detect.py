@@ -84,7 +84,7 @@ def monitor(direction, q):
 
             for station, destination, train in queue_trains:
                 _exit = 0
-                if not temp_suspend:
+                if temp_suspend:
                     for detail, _time in temp_suspend:
                         if train == detail:
                             _exit = 1
@@ -116,9 +116,10 @@ def listener(q):  # task to queue information into a manager dictionary
     """
     while True:
         get_set = q.get()
+        print(get_set)
         compass, station, line, no_cars = get_set
         station = Station.train_stations[station]
-        lcd_disp = vd.LCD(station, 5)
+        lcd_disp = vd.LCD(station, 8)
         lcd_disp.train_detail(line, no_cars)
         # led_disp = vd.LED(compass)
         # led_disp.led_lights()
