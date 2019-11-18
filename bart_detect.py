@@ -77,7 +77,7 @@ def monitor(direction, q):
                         if estimate['direction'] == direction[station][0]:
                             queue_trains.append((station, item['destination'], estimate))
                             break
-            if temp_suspend != []:
+            if temp_suspend:
                 for i in temp_suspend:
                     if time_comp(real_time, i[1]):
                         temp_suspend.remove(i)
@@ -91,13 +91,13 @@ def monitor(direction, q):
                 if _exit == 1:
                     continue
                 if train['minutes'] == 'Leaving':
-                    time_delay.append((station, destination, train, real_time +
+                    time_delay.append((station, destination, train['direction'], train['length'], real_time +
                                        datetime.timedelta(0, direction[station][1])))
                     temp_suspend.append((train, real_time + datetime.timedelta(0, 120)))
             try:
                 for sched in time_delay:
                     if time_comp(real_time, sched[3]):
-                        q.put((sched[2]['direction'], sched[0], sched[1], sched[2]['length']))
+                        q.put((sched[2], sched[0], sched[1], sched[3]))
                         time_delay.remove(sched)
             except IndexError:
                 pass
