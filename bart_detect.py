@@ -7,35 +7,16 @@ of your room window.
 import datetime
 import time
 import multiprocessing as mp
+import os
 from pybart.api import BART
-import RPi.GPIO as gpio
-bart = BART(json_format=True)
+import visual_display as vd
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BART = BART(json_format=True)
 
-
-def led_trigger(compass):
-    """
-    A function to start LED sequence.
-    The function takes a str cardinal direction
-    as its argument.
-    """
-    gpio.setmode(gpio.BCM)
-    gpio.setwarnings(False)
-    led_dir = [27, 23, 17, 18]
-    led_dir = led_dir if compass.lower() == 'south' else led_dir[::-1]
-    for i in led_dir:
-        gpio.setup(i, gpio.OUT)
-    for i in range(35): # number of flashes
-        for index, j in enumerate(led_dir):
-            gpio.output(j, True)
-            if index == 3:
-                gpio.output(led_dir[0], False)
-            time.sleep(.1)
-        for index, k in enumerate(led_dir):
-            if index == 0:
-                continue
-            gpio.output(k, False)
-            time.sleep(.1)
-    gpio.cleanup()
+class Station:
+    train_stations = {'nbrk': 'North Berkeley',
+        'plza': 'El Cerrito Plza'
+        }
 
 
 class LiveFeed:
@@ -47,7 +28,7 @@ class LiveFeed:
 
     def direction_info(self):
         # body.decode('utf-8') in line 64 api.py - must decode to utf-8
-        return bart.etd.etd(self.station)['station'][0]['etd']
+        return BART.etd.etd(self.station)['station'][0]['etd']
 
 
 class Scheduler:
@@ -85,14 +66,14 @@ def monitor(direction, q):
                 for item in details:
                     for estimate in item['estimate']:
                         if estimate['direction'] == direction[station][0]:
-                            queue_trains.append((station, estimate))
+                            queue_trains.append((station, item['destination'], estimate))
                             break
             if temp_suspend != []:
                 for i in temp_suspend:
                     if time_comp(real_time, i[1]):
                         temp_suspend.remove(i)
 
-            for station, train in queue_trains:
+            for station, destination, train in queue_trains:
                 _exit = 0
                 if len(temp_suspend) != 0:
                     for detail, _time in temp_suspend:
@@ -100,14 +81,15 @@ def monitor(direction, q):
                             _exit = 1
                 if _exit == 1:
                     continue
+                print(station, destination, train)
                 if train['minutes'] == 'Leaving':
-                    time_delay.append((train['direction'], real_time +
-                                    datetime.timedelta(0, direction[station][1])))
+                    time_delay.append((station, destination, train, real_time +
+                                    datetime.timedelta(0, direction[station][2])))
                     temp_suspend.append((train, real_time + datetime.timedelta(0, 120)))
             try:
                 for sched in time_delay:
-                    if time_comp(real_time, sched[1]):
-                        q.put(sched[0])
+                    if time_comp(real_time, sched[3]):
+                        q.put(sched[2]['direction'], sched[0], sched[1], sched[2]['length'])
                         time_delay.remove(sched)
             except IndexError:
                 pass
@@ -125,15 +107,18 @@ def listener(q):  # task to queue information into a manager dictionary
     listener is key to not disrupting the BART monitoring process.
     """
     while True:
-        next_flash = q.get()
-        led_trigger(next_flash)
-
+        compass, station, line, no_cars = q.get()
+        station = Station.train_stations[station]
+        lcd_disp = vd.LCD(station, 10)
+        lcd_disp.train_detail(line, no_cars)
+        
 
 def main():
     """
     Set up queue monitoring and multiprocess environment.
     Start process when application is run.
     """
+    os.chdir(BASE_DIR)
     manager = mp.Manager()
     q = manager.Queue()
     pool = mp.Pool(2) # two processes - one for checking time, one for blinking led
