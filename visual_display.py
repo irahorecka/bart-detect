@@ -108,7 +108,7 @@ class LCD:
     def train_detail(self, line, no_cars):
         try:
             no_cars = int(no_cars)
-            for i in self.rep:
+            for i in range(self.rep):
                 self.lcd_string("{}".format(self.stations), self.LCD_LINE_1)
                 self.lcd_string("Approaching", self.LCD_LINE_2)
                 time.sleep(2)
