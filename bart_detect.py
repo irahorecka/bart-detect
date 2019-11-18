@@ -9,14 +9,19 @@ import time
 import multiprocessing as mp
 import os
 from pybart.api import BART
-#import visual_display as vd
+import visual_display as vd
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 BART = BART(json_format=True)
 
+
 class Station:
+    """
+    Store information for static data, such
+    as station name.
+    """
     train_stations = {'nbrk': 'North Berkeley',
-        'plza': 'El Cerrito Plza'
-        }
+                      'plza': 'El Cerrito Plza'
+                      }
 
 
 class LiveFeed:
@@ -40,6 +45,10 @@ class Scheduler:
         self.stn_list = station_list
 
     def get_feed(self):
+        """
+        get live feed of stations in station_list
+        via LiveFeed API class
+        """
         return [(station, LiveFeed(station).direction_info()) for station in self.stn_list]
 
 
@@ -75,7 +84,7 @@ def monitor(direction, q):
 
             for station, destination, train in queue_trains:
                 _exit = 0
-                if len(temp_suspend) != 0:
+                if not temp_suspend:
                     for detail, _time in temp_suspend:
                         if train == detail:
                             _exit = 1
@@ -83,7 +92,7 @@ def monitor(direction, q):
                     continue
                 if train['minutes'] == 'Leaving':
                     time_delay.append((station, destination, train, real_time +
-                                    datetime.timedelta(0, direction[station][1])))
+                                       datetime.timedelta(0, direction[station][1])))
                     temp_suspend.append((train, real_time + datetime.timedelta(0, 120)))
             try:
                 for sched in time_delay:
@@ -94,7 +103,7 @@ def monitor(direction, q):
                 pass
             tend = time.time()
             if 1-(tend-tstart) > 0:
-                time.sleep(1-(tend-tstart)) # try to give a one second query freq, abs if < 0
+                time.sleep(1-(tend-tstart))  # try to give a one second query freq, abs if < 0
         except (RuntimeError, KeyError) as error:
             print("{}. Retrying...".format(error))
             time.sleep(5)
@@ -111,7 +120,9 @@ def listener(q):  # task to queue information into a manager dictionary
         station = Station.train_stations[station]
         lcd_disp = vd.LCD(station, 10)
         lcd_disp.train_detail(line, no_cars)
-        
+        # led_disp = vd.LED(compass)
+        # led_disp.led_lights()
+
 
 def main():
     """
@@ -121,10 +132,10 @@ def main():
     os.chdir(BASE_DIR)
     manager = mp.Manager()
     q = manager.Queue()
-    pool = mp.Pool(2) # two processes - one for checking time, one for blinking led
-    watcher = pool.apply_async(listener, (q,)) # first process
+    pool = mp.Pool(2)  # two processes - one for checking time, one for blinking led
+    watcher = pool.apply_async(listener, (q,))  # first process
     direction = {'nbrk': ['North', 85], 'plza': ['South', 140]}
-    job = pool.apply_async(monitor, (direction, q)) # second multiprocess
+    job = pool.apply_async(monitor, (direction, q))  # second multiprocess
     job.get()
     pool.close()
     pool.join()
