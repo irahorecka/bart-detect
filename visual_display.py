@@ -106,16 +106,18 @@ class LCD:
             self.lcd_byte(ord(message[i]),self.LCD_CHR)
 
     def train_detail(self, line, no_cars):
+        print(self.rep)
         try:
             no_cars = int(no_cars)
             for i in range(self.rep):
-                self.lcd_string("Approaching from", self.LCD_LINE_2)
-                self.lcd_string("{}".format(self.stations), self.LCD_LINE_1)
+                self.lcd_string("Approaching from", self.LCD_LINE_1)
+                self.lcd_string("{}".format(self.stations), self.LCD_LINE_2)
                 time.sleep(2)
 
                 self.lcd_string("{}".format(line.title()), self.LCD_LINE_1)
                 self.lcd_string("{} car train".format(no_cars), self.LCD_LINE_2)
                 time.sleep(2)
+            self.lcd_byte(0x01, self.LCD_CMD)
         except Exception as error:
             print(error)
         finally:
