@@ -96,7 +96,7 @@ def monitor(direction, q):
                     temp_suspend.append((train, real_time + datetime.timedelta(0, 120)))
             try:
                 for sched in time_delay:
-                    if time_comp(real_time, sched[3]):
+                    if time_comp(real_time, sched[4]):
                         q.put((sched[2], sched[0], sched[1], sched[3]))
                         time_delay.remove(sched)
             except IndexError:
