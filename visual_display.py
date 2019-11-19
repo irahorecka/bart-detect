@@ -121,8 +121,12 @@ class LCD:
 
     def lcd_boot(self):
         """
-        Set LCD to blank screen upon boot.
+        Set LCD screen to display message upon
+        boot.
         """
+        self.lcd_string("Welcome to", self.LCD_LINE_1)
+        self.lcd_string("BART_detect!", self.LCD_LINE_2)
+        time.sleep(4)
         self.lcd_byte(0x01, self.LCD_CMD)
 
     def train_detail(self):
@@ -142,7 +146,6 @@ class LCD:
                 self.lcd_string("{}".format(self.packet['train_line'].title()), self.LCD_LINE_1)
                 self.lcd_string("{} car train".format(no_cars), self.LCD_LINE_2)
                 time.sleep(2)
-            self.lcd_byte(0x01, self.LCD_CMD)
         except Exception as error:
             print(error)
         finally:
