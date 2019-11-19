@@ -95,13 +95,15 @@ def monitor(direction, q):
             try:
                 for sched in time_delay:
                     if time_comp(real_time, sched[4]):
-                        q.put((sched[2], sched[0], sched[1], sched[3]))
+                        packet_queue = {'compass': sched[2], 'station': Station.train_stations[sched[0]],
+                                        'train_line': sched[1], 'car_number': sched[3]}
+                        q.put(packet_queue)
                         time_delay.remove(sched)
             except IndexError:
                 pass
             tend = time.time()
             if 1-(tend-tstart) > 0:
-                time.sleep(1-(tend-tstart))  # try to give a one second query freq, abs if < 0
+                time.sleep(1-(tend-tstart))
         except (RuntimeError, KeyError) as error:
             print("{}. Retrying...".format(error))
             time.sleep(5)
@@ -113,13 +115,10 @@ def listener(q):  # task to queue information into a manager dictionary
     listener is key to not disrupting the BART monitoring process.
     """
     while True:
-        get_set = q.get()
-        print(get_set)
-        compass, station, line, no_cars = get_set
-        station = Station.train_stations[station]
-        lcd_disp = vd.LCD(station, 8)
-        lcd_disp.train_detail(line, no_cars)
-        # led_disp = vd.LED(compass)
+        packet = q.get()
+        lcd_disp = vd.LCD(packet, 8)
+        lcd_disp.train_detail()
+        # led_disp = vd.LED(packet)
         # led_disp.led_lights()
 
 

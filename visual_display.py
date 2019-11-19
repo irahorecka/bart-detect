@@ -8,8 +8,8 @@ import smbus
 import time
 
 class LED:
-    def __init__(self, compass):
-        self.compass = compass
+    def __init__(self, packet):
+        self.packet = packet
         gpio.setmode(gpio.BCM)
         gpio.setwarnings(False)
 
@@ -20,7 +20,7 @@ class LED:
         as its argument.
         """
         led_dir = [27, 23, 17, 18]
-        led_dir = led_dir if self.compass.lower() == 'south' else led_dir[::-1]
+        led_dir = led_dir if self.packet['compass'].lower() == 'south' else led_dir[::-1]
         for i in led_dir:
             gpio.setup(i, gpio.OUT)
         for i in range(35): # number of flashes
@@ -58,8 +58,8 @@ class LCD:
     #bus = smbus.SMBus(0)  # Rev 1 Pi uses 0
     bus = smbus.SMBus(1) # Rev 2 Pi uses 1
 
-    def __init__(self, stations, repetition):
-        self.stations = stations
+    def __init__(self, packet, repetition):
+        self.packet = packet
         if not isinstance(repetition, int):
             raise TypeError("repetition must be set to an integer")
         else:
@@ -105,16 +105,15 @@ class LCD:
         for i in range(self.LCD_WIDTH):
             self.lcd_byte(ord(message[i]),self.LCD_CHR)
 
-    def train_detail(self, line, no_cars):
-        print(self.rep)
+    def train_detail(self):
         try:
-            no_cars = int(no_cars)
+            no_cars = int(self.packet['car_number'])
             for i in range(self.rep):
                 self.lcd_string("Approaching from", self.LCD_LINE_1)
-                self.lcd_string("{}".format(self.stations), self.LCD_LINE_2)
+                self.lcd_string("{}".format(self.packet['station']), self.LCD_LINE_2)
                 time.sleep(2)
 
-                self.lcd_string("{}".format(line.title()), self.LCD_LINE_1)
+                self.lcd_string("{}".format(self.packet['train_line'].title()), self.LCD_LINE_1)
                 self.lcd_string("{} car train".format(no_cars), self.LCD_LINE_2)
                 time.sleep(2)
             self.lcd_byte(0x01, self.LCD_CMD)
