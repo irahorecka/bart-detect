@@ -62,7 +62,7 @@ def monitor(direction, q):
     trains. This function checks statuses of department trains
     through the BART API, and if a train is leaving, it will
     add an appropriate delay and transmit the information to
-    a handler function (in my case led_trigger).
+    the listener func.
     """
     temp_suspend = []
     time_delay = []

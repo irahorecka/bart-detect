@@ -13,6 +13,15 @@ To run the scipt, type this into the terminal of your Raspberry Pi (I have a Ras
 This script will run indefinitely until interrupted. To interrupt the script, press *CTRL + C* in your running terminal.<br><br>
 
 ## **Raspberry Pi GPIO** <br>
+### How to set up your 16x2 LCD I2C display:<br>
+A full tutorial: <a href=https://www.raspberrypi-spy.co.uk/2015/05/using-an-i2c-enabled-lcd-screen-with-the-raspberry-pi>How to setup your 16x2 LCD I2C display with Raspberry Pi</a><br>
+A diagram of how to wire your LCD display with an I2C backpack to the Raspberry Pi:<br>
+Note: The I2C backpack has an embedded PCF8574 I/O expander for the I2C bus, which allows me to connect the LCD display / I2C backpack directly to the GPIO pins on the Raspberry Pi without damaging the <a href=https://raspberrypi.stackexchange.com/questions/68172/i2c-bus-voltage>GPIO pins</a>.<br>
+<p align = 'center'>
+<img src=https://i.imgur.com/kSKlNOX.png alt="LCD with I2C backpack - RPi"
+     width="500" height="500"><br>
+</p>
+
 ### How to set up your breadboard with LED lights: <br>
 The basics: <a href="https://www.youtube.com/watch?v=BWYy3qZ315U">How to set up an LED light using your Raspberry Pi </a><br>
 A slightly more elborate LED setup: <br>
@@ -25,4 +34,4 @@ Finally, my simple LED setup:<br>
 </p><br>
 Please let me know if you have any questions! You are free to change BART stations to your preference, just make sure you have the correct station keys. Message me if you have any questons and we can work together to set this up!<br><br>
 
-**Fin**
+***Fin***
