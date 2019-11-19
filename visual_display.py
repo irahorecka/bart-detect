@@ -119,6 +119,12 @@ class LCD:
         for i in range(self.LCD_WIDTH):
             self.lcd_byte(ord(message[i]), self.LCD_CHR)
 
+    def lcd_boot(self):
+        """
+        Set LCD to blank screen upon boot.
+        """
+        self.lcd_byte(0x01, self.LCD_CMD)
+
     def train_detail(self):
         """
         Function to trigger string sequence to
