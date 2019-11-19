@@ -32,6 +32,10 @@ class LiveFeed:
         self.station = station
 
     def direction_info(self):
+        """
+        Acquire live API information for
+        specified BART stations
+        """
         # body.decode('utf-8') in line 64 api.py - must decode to utf-8
         return BART.etd.etd(self.station)['station'][0]['etd']
 

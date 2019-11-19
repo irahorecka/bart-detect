@@ -3,11 +3,16 @@ A .py file to select various options
 of visual displays. A child script of
 bart_detect.py
 """
-import RPi.GPIO as gpio
-import smbus
 import time
+import smbus
+import RPi.GPIO as gpio
+
 
 class LED:
+    """
+    A class to handle LED light sequences
+    upon instantiation.
+    """
     def __init__(self, packet):
         self.packet = packet
         gpio.setmode(gpio.BCM)
@@ -38,8 +43,12 @@ class LED:
 
 
 class LCD:
+    """
+    A class to handle LCD display
+    sequences upon instantiation.
+    """
     # Define some device parameters
-    I2C_ADDR  = 0x27 # I2C device address
+    I2C_ADDR = 0x27 # I2C device address
     LCD_WIDTH = 16   # Maximum characters per line
     # Define some device constants
     LCD_CHR = 1 # Mode - Sending data
@@ -48,8 +57,8 @@ class LCD:
     LCD_LINE_2 = 0xC0 # LCD RAM address for the 2nd line
     LCD_LINE_3 = 0x94 # LCD RAM address for the 3rd line
     LCD_LINE_4 = 0xD4 # LCD RAM address for the 4th line
-    LCD_BACKLIGHT  = 0x08  # On
-    #LCD_BACKLIGHT = 0x00  # Off
+    LCD_BACKLIGHT = 0x08  # On
+    #LCD_BACKLIGHT= 0x00  # Off
     ENABLE = 0b00000100 # Enable bit
     # Timing constants
     E_PULSE = 0.0005
@@ -59,28 +68,33 @@ class LCD:
     bus = smbus.SMBus(1) # Rev 2 Pi uses 1
 
     def __init__(self, packet, repetition):
+        """
+        Takes information as dictionary format
+        (packet) with repetition count (type int).
+        """
         self.packet = packet
         if not isinstance(repetition, int):
             raise TypeError("repetition must be set to an integer")
-        else:
-            self.rep = repetition
+        self.rep = repetition
         self.lcd_init()
 
     def lcd_init(self):
-        # Initialise display
-        self.lcd_byte(0x33,self.LCD_CMD) # 110011 Initialise
-        self.lcd_byte(0x32,self.LCD_CMD) # 110010 Initialise
-        self.lcd_byte(0x06,self.LCD_CMD) # 000110 Cursor move direction
-        self.lcd_byte(0x0C,self.LCD_CMD) # 001100 Display On,Cursor Off, Blink Off 
-        self.lcd_byte(0x28,self.LCD_CMD) # 101000 Data length, number of lines, font size
-        self.lcd_byte(0x01,self.LCD_CMD) # 000001 Clear display
+        """Initialise display"""
+        self.lcd_byte(0x33, self.LCD_CMD) # 110011 Initialise
+        self.lcd_byte(0x32, self.LCD_CMD) # 110010 Initialise
+        self.lcd_byte(0x06, self.LCD_CMD) # 000110 Cursor move direction
+        self.lcd_byte(0x0C, self.LCD_CMD) # 001100 Display On,Cursor Off, Blink Off
+        self.lcd_byte(0x28, self.LCD_CMD) # 101000 Data length, number of lines, font size
+        self.lcd_byte(0x01, self.LCD_CMD) # 000001 Clear display
         time.sleep(self.E_DELAY)
 
     def lcd_byte(self, bits, mode):
-        # Send byte to data pins
-        # bits = the data
-        # mode = 1 for data
-        #        0 for command
+        """
+        Send byte to data pins
+        bits = the data
+        mode = 1 for data
+               0 for command
+        """
         bits_high = mode | (bits & 0xF0) | self.LCD_BACKLIGHT
         bits_low = mode | ((bits<<4) & 0xF0) | self.LCD_BACKLIGHT
         # High bits
@@ -91,21 +105,27 @@ class LCD:
         self.lcd_toggle_enable(bits_low)
 
     def lcd_toggle_enable(self, bits):
-        # Toggle enable
+        """ Toggle enable display """
         time.sleep(self.E_DELAY)
         self.bus.write_byte(self.I2C_ADDR, (bits | self.ENABLE))
         time.sleep(self.E_PULSE)
-        self.bus.write_byte(self.I2C_ADDR,(bits & ~self.ENABLE))
+        self.bus.write_byte(self.I2C_ADDR, (bits & ~self.ENABLE))
         time.sleep(self.E_DELAY)
 
     def lcd_string(self, message, line):
-        # Send string to display
-        message = message.center(self.LCD_WIDTH," ")
+        """ Send string to display """
+        message = message.center(self.LCD_WIDTH, " ")
         self.lcd_byte(line, self.LCD_CMD)
         for i in range(self.LCD_WIDTH):
-            self.lcd_byte(ord(message[i]),self.LCD_CHR)
+            self.lcd_byte(ord(message[i]), self.LCD_CHR)
 
     def train_detail(self):
+        """
+        Function to trigger string sequence to
+        LCD display:
+        "Approaching from {station}"
+        "{number cars} car train"
+        """
         try:
             no_cars = int(self.packet['car_number'])
             for i in range(self.rep):
