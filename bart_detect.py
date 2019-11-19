@@ -132,7 +132,7 @@ def main():
     Start process when application is run.
     """
     os.chdir(BASE_DIR)
-    vd.LCD(None, None).lcd_boot()
+    vd.LCD(None, 0).lcd_boot()
     manager = mp.Manager()
     q = manager.Queue()
     pool = mp.Pool(2)  # two processes - one for checking time, one for blinking led
