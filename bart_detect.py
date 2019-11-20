@@ -154,7 +154,7 @@ def main():
     g.put(lcd.lcd_time)
     print('pass here')
     direction = {'nbrk': ['North', 85], 'plza': ['South', 140]}
-    job = pool.apply_async(monitor, (direction, q))  # second multiprocess
+    job = pool.apply_async(monitor, (direction, q, g))  # second multiprocess
     job.get()
     pool.close()
     pool.join()
