@@ -9,6 +9,7 @@ import time
 import multiprocessing as mp
 import os
 from pybart.api import BART
+import timeout
 import visual_display as vd
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 BART = BART(json_format=True)
@@ -56,6 +57,7 @@ class Scheduler:
         return [(station, LiveFeed(station).direction_info()) for station in self.stn_list]
 
 
+@timeout.timeout(10) #timeout connection after 10 seconds
 def monitor(direction, q):
     """
     A function to perform indefinite monitoring for upcoming
@@ -107,15 +109,15 @@ def monitor(direction, q):
                         time_delay.remove(sched)
             except IndexError:
                 pass
+        except (RuntimeError, KeyError, timeout.TimeoutError) as error:
+            print("{}. Retrying...".format(error))
+            time.sleep(3)
+        finally:
             t1 = time.time()
             if t1 - t0 > 1:
                 pass
             else:
                 time.sleep(1 - (t1 - t0))
-
-        except (RuntimeError, KeyError) as error:
-            print("{}. Retrying...".format(error))
-            time.sleep(5)
 
 
 def listener(q):  # task to queue information into a manager dictionary
@@ -150,7 +152,7 @@ def main():
     os.chdir(BASE_DIR)
     manager = mp.Manager()
     q = manager.Queue()
-    pool = mp.Pool(3)
+    pool = mp.Pool(2)
     watcher = pool.apply_async(listener, (q,))  # first process
     lcd = vd.LCD()
     lcd.lcd_boot()
