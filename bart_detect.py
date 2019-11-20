@@ -151,6 +151,7 @@ def main():
     watcher = pool.apply_async(listener, (q,))  # first process
     lcd = vd.LCD()
     lcd.lcd_boot()
+    time.sleep(0.5)
     direction = {'nbrk': ['North', 85], 'plza': ['South', 140]}
     job = pool.apply_async(monitor, (direction, q, g))  # second multiprocess
     job.get()
