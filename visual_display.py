@@ -135,7 +135,6 @@ class LCD:
         Set LCD screen to display current time
         during idle. 
         """
-        self.lcd_init()
         try:
             current_time = datetime.datetime.now()
             display_time = current_time.strftime('%I:%M:%S %p')
@@ -145,8 +144,7 @@ class LCD:
             self.lcd_string(display_date, self.LCD_LINE_2)
         except Exception as error:
             print(error)
-        finally:
-            self.lcd_blank()
+
 
     def train_detail(self, packet, repetition):
         """
@@ -174,4 +172,3 @@ class LCD:
             print(error)
         finally:
             self.lcd_blank()
-            time.sleep(0.5)
