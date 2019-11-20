@@ -71,16 +71,8 @@ class LCD:
              '5': 'May', '6': 'Jun', '7': 'Jul', '8': 'Aug',
              '9': 'Sept', '10': 'Oct', '11': 'Nov', '12': 'Dec'}
 
-    def __init__(self, packet, repetition):
-        """
-        Takes information as dictionary format
-        (packet) with repetition count (type int).
-        """
-        self.packet = packet
-        if not isinstance(repetition, int):
-            raise TypeError("repetition must be set to an integer")
-        self.rep = repetition
-        self.lcd_init()
+    def __init__(self):
+        pass
 
     def lcd_init(self):
         """Initialise display"""
@@ -149,25 +141,32 @@ class LCD:
             t1 = time.time()
             time.sleep(1-(t1-t0)) # this process should not exceed 1 sec.
 
-
-    def train_detail(self):
+    def train_detail(self, packet, repetition):
         """
         Function to trigger string sequence to
         LCD display:
         "Approaching from {station}"
         "{number cars} car train"
+        Takes information as dictionary format
+        (packet) with repetition count (type int).
         """
+        if not isinstance(repetition, int):
+            raise TypeError("repetition must be set to an integer")
+        self.lcd_init()
         try:
-            no_cars = int(self.packet['car_number'])
-            for i in range(self.rep):
+            self.lcd_byte(0x01, self.LCD_CMD)
+            time.sleep(0.5)
+            no_cars = int(packet['car_number'])
+            for i in range(repetition):
                 self.lcd_string("Approaching from", self.LCD_LINE_1)
-                self.lcd_string("{}".format(self.packet['station']), self.LCD_LINE_2)
+                self.lcd_string("{}".format(packet['station']), self.LCD_LINE_2)
                 time.sleep(2)
 
-                self.lcd_string("{}".format(self.packet['train_line'].title()), self.LCD_LINE_1)
+                self.lcd_string("{}".format(packet['train_line'].title()), self.LCD_LINE_1)
                 self.lcd_string("{} car train".format(no_cars), self.LCD_LINE_2)
                 time.sleep(2)
         except Exception as error:
             print(error)
         finally:
             self.lcd_byte(0x01, self.LCD_CMD)
+            time.sleep(0.5)

@@ -56,7 +56,7 @@ class Scheduler:
         return [(station, LiveFeed(station).direction_info()) for station in self.stn_list]
 
 
-def monitor(direction, q):
+def monitor(direction, q, g):
     """
     A function to perform indefinite monitoring for upcoming
     trains. This function checks statuses of department trains
@@ -101,7 +101,7 @@ def monitor(direction, q):
                     if time_comp(real_time, sched[4]):
                         packet_queue = {'compass': sched[2], 'station': Station.train_stations[sched[0]],
                                         'train_line': sched[1], 'car_number': sched[3]}
-                        q.put(packet_queue)
+                        q.put(packet_queue, g)
                         time_delay.remove(sched)
             except IndexError:
                 pass
@@ -119,9 +119,10 @@ def listener(q):  # task to queue information into a manager dictionary
     listener is key to not disrupting the BART monitoring process.
     """
     while True:
-        packet = q.get()
-        lcd_disp = vd.LCD(packet, 8)
-        lcd_disp.train_detail()
+        packet, g = q.get()
+        lcd_disp = vd.LCD()
+        lcd_disp.train_detail(packet, 8)
+        g.put(lcd_disp.lcd_time())
         # led_disp = vd.LED(packet)
         # led_disp.led_lights()
 
@@ -148,9 +149,9 @@ def main():
     pool = mp.Pool(3)
     watcher = pool.apply_async(listener, (q,))  # first process
     idle_watcher = pool.apply_async(idler, (g,))
-    start_up = vd.LCD(None, 0)
-    start_up.lcd_boot()
-    g.put(start_up.lcd_time)
+    lcd = vd.LCD()
+    lcd.lcd_boot()
+    g.put(lcd.lcd_time)
     print('pass here')
     direction = {'nbrk': ['North', 85], 'plza': ['South', 140]}
     job = pool.apply_async(monitor, (direction, q))  # second multiprocess
