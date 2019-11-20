@@ -3,6 +3,7 @@ A .py file to select various options
 of visual displays. A child script of
 bart_detect.py
 """
+import datetime
 import time
 import smbus
 import RPi.GPIO as gpio
@@ -66,6 +67,9 @@ class LCD:
     #Open I2C interface
     #bus = smbus.SMBus(0)  # Rev 1 Pi uses 0
     bus = smbus.SMBus(1) # Rev 2 Pi uses 1
+    month = {'1': 'Jan', '2': 'Feb', '3': 'Mar', '4': 'Apr',
+             '5': 'May', '6': 'Jun', '7': 'Jul', '8': 'Aug',
+             '9': 'Sept', '10': 'Oct', '11': 'Nov', '12': 'Dec'}
 
     def __init__(self, packet, repetition):
         """
@@ -128,6 +132,23 @@ class LCD:
         self.lcd_string("BART_detect!", self.LCD_LINE_2)
         time.sleep(4)
         self.lcd_byte(0x01, self.LCD_CMD)
+
+    def lcd_time(self):
+        """
+        Set LCD screen to display current time
+        during idle. 
+        """
+        while True:
+            t0 = time.time()
+            current_time = datetime.datetime.now()
+            display_time = current_time.strftime('%I:%M:%S %p')
+            current_mo = self.month[current_time.strftime('%m')]
+            display_date = current_time.strftime('{} %d, %Y'.format(current_mo))
+            self.lcd_string(display_time, self.LCD_LINE_1)
+            self.lcd_string(display_date, self.LCD_LINE_2)
+            t1 = time.time()
+            time.sleep(1-(t1-t0)) # this process should not exceed 1 sec.
+
 
     def train_detail(self):
         """

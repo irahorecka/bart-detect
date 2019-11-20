@@ -120,8 +120,12 @@ def listener(q):  # task to queue information into a manager dictionary
     """
     while True:
         packet = q.get()
-        lcd_disp = vd.LCD(packet, 8)
-        lcd_disp.train_detail()
+        if callable(packet):
+            packet()
+        else:
+            lcd_disp = vd.LCD(packet, 8)
+            lcd_disp.train_detail()
+        vd.LCD(None, 0).lcd_time()
         # led_disp = vd.LED(packet)
         # led_disp.led_lights()
 
@@ -132,11 +136,14 @@ def main():
     Start process when application is run.
     """
     os.chdir(BASE_DIR)
-    vd.LCD(None, 0).lcd_boot()
     manager = mp.Manager()
     q = manager.Queue()
     pool = mp.Pool(2)  # two processes - one for checking time, one for blinking led
     watcher = pool.apply_async(listener, (q,))  # first process
+    start_up = vd.LCD(None, 0)
+    start_up.lcd_boot()
+    q.put(start_up.lcd_time)
+    print('pass here')
     direction = {'nbrk': ['North', 85], 'plza': ['South', 140]}
     job = pool.apply_async(monitor, (direction, q))  # second multiprocess
     job.get()
