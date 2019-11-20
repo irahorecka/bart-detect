@@ -131,7 +131,9 @@ def listener(q):  # task to queue information into a manager dictionary
                     packet = None
                 lcd.lcd_time()
                 if isinstance(packet, dict):
+                    time.sleep(0.5)
                     lcd.train_detail(packet, 8)
+                    time.sleep(0.5)
                     # led_disp = vd.LED(packet)
                     # led_disp.led_lights()
 
