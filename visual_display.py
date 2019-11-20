@@ -120,6 +120,7 @@ class LCD:
         Set LCD screen to display message upon
         boot.
         """
+        self.lcd_byte(0x01, self.LCD_CMD)
         self.lcd_string("Welcome to", self.LCD_LINE_1)
         self.lcd_string("BART_detect!", self.LCD_LINE_2)
         time.sleep(4)
