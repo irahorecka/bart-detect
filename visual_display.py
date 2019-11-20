@@ -131,16 +131,22 @@ class LCD:
         Set LCD screen to display current time
         during idle. 
         """
-        while True:
-            t0 = time.time()
-            current_time = datetime.datetime.now()
-            display_time = current_time.strftime('%I:%M:%S %p')
-            current_mo = self.month[current_time.strftime('%m')]
-            display_date = current_time.strftime('{} %d, %Y'.format(current_mo))
-            self.lcd_string(display_time, self.LCD_LINE_1)
-            self.lcd_string(display_date, self.LCD_LINE_2)
-            t1 = time.time()
-            time.sleep(1-(t1-t0)) # this process should not exceed 1 sec.
+        try:
+            while True:
+                t0 = time.time()
+                current_time = datetime.datetime.now()
+                display_time = current_time.strftime('%I:%M:%S %p')
+                current_mo = self.month[current_time.strftime('%m')]
+                display_date = current_time.strftime('{} %d, %Y'.format(current_mo))
+                self.lcd_string(display_time, self.LCD_LINE_1)
+                self.lcd_string(display_date, self.LCD_LINE_2)
+                t1 = time.time()
+                time.sleep(1-(t1-t0)) # this process should not exceed 1 sec.
+        except Exception as error:
+            print(error)
+        finally:
+            self.lcd_byte(0x01, self.LCD_CMD)
+            time.sleep(0.5)
 
     def train_detail(self, packet, repetition):
         """
