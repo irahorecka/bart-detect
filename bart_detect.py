@@ -32,6 +32,7 @@ class LiveFeed:
     def __init__(self, station):
         self.station = station
 
+    @timeout.timeout(10) #timeout connection after 10 seconds
     def direction_info(self):
         """
         Acquire live API information for
@@ -57,7 +58,6 @@ class Scheduler:
         return [(station, LiveFeed(station).direction_info()) for station in self.stn_list]
 
 
-@timeout.timeout(10) #timeout connection after 10 seconds
 def monitor(direction, q):
     """
     A function to perform indefinite monitoring for upcoming
@@ -111,7 +111,7 @@ def monitor(direction, q):
                 pass
         except (RuntimeError, KeyError, timeout.TimeoutError) as error:
             print("{}. Retrying...".format(error))
-            time.sleep(3)
+            time.sleep(1)
         finally:
             t1 = time.time()
             if t1 - t0 > 1:
