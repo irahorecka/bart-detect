@@ -121,6 +121,7 @@ class LCD:
         boot.
         """
         self.lcd_byte(0x01, self.LCD_CMD)
+        time.sleep(0.1)
         self.lcd_string("Welcome to", self.LCD_LINE_1)
         self.lcd_string("BART_detect!", self.LCD_LINE_2)
         time.sleep(4)
