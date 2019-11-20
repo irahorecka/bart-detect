@@ -71,16 +71,8 @@ class LCD:
              '5': 'May', '6': 'Jun', '7': 'Jul', '8': 'Aug',
              '9': 'Sept', '10': 'Oct', '11': 'Nov', '12': 'Dec'}
 
-    def __init__(self, packet, repetition):
-        """
-        Takes information as dictionary format
-        (packet) with repetition count (type int).
-        """
-        self.packet = packet
-        if not isinstance(repetition, int):
-            raise TypeError("repetition must be set to an integer")
-        self.rep = repetition
-        self.lcd_init()
+    def __init__(self):
+        pass
 
     def lcd_init(self):
         """Initialise display"""
@@ -116,6 +108,10 @@ class LCD:
         self.bus.write_byte(self.I2C_ADDR, (bits & ~self.ENABLE))
         time.sleep(self.E_DELAY)
 
+    def lcd_blank(self):
+        """ Blank LCD display """
+        self.lcd_byte(0x01, self.LCD_CMD)
+
     def lcd_string(self, message, line):
         """ Send string to display """
         message = message.center(self.LCD_WIDTH, " ")
@@ -128,46 +124,54 @@ class LCD:
         Set LCD screen to display message upon
         boot.
         """
+        self.lcd_init()
         self.lcd_string("Welcome to", self.LCD_LINE_1)
         self.lcd_string("BART_detect!", self.LCD_LINE_2)
         time.sleep(4)
-        self.lcd_byte(0x01, self.LCD_CMD)
+        self.lcd_blank()
 
     def lcd_time(self):
         """
         Set LCD screen to display current time
         during idle. 
         """
-        while True:
-            t0 = time.time()
+        self.lcd_init()
+        try:
             current_time = datetime.datetime.now()
             display_time = current_time.strftime('%I:%M:%S %p')
             current_mo = self.month[current_time.strftime('%m')]
             display_date = current_time.strftime('{} %d, %Y'.format(current_mo))
             self.lcd_string(display_time, self.LCD_LINE_1)
             self.lcd_string(display_date, self.LCD_LINE_2)
-            t1 = time.time()
-            time.sleep(1-(t1-t0)) # this process should not exceed 1 sec.
+        except Exception as error:
+            print(error)
+        finally:
+            self.lcd_blank()
 
-
-    def train_detail(self):
+    def train_detail(self, packet, repetition):
         """
         Function to trigger string sequence to
         LCD display:
         "Approaching from {station}"
         "{number cars} car train"
+        Takes information as dictionary format
+        (packet) with repetition count (type int).
         """
+        self.lcd_init()
+        if not isinstance(repetition, int):
+            raise TypeError("repetition must be set to an integer")
         try:
-            no_cars = int(self.packet['car_number'])
-            for i in range(self.rep):
+            no_cars = int(packet['car_number'])
+            for i in range(repetition):
                 self.lcd_string("Approaching from", self.LCD_LINE_1)
-                self.lcd_string("{}".format(self.packet['station']), self.LCD_LINE_2)
+                self.lcd_string("{}".format(packet['station']), self.LCD_LINE_2)
                 time.sleep(2)
 
-                self.lcd_string("{}".format(self.packet['train_line'].title()), self.LCD_LINE_1)
+                self.lcd_string("{}".format(packet['train_line'].title()), self.LCD_LINE_1)
                 self.lcd_string("{} car train".format(no_cars), self.LCD_LINE_2)
                 time.sleep(2)
         except Exception as error:
             print(error)
         finally:
-            self.lcd_byte(0x01, self.LCD_CMD)
+            self.lcd_blank()
+            time.sleep(0.5)

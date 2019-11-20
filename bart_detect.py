@@ -68,6 +68,7 @@ def monitor(direction, q):
     time_delay = []
     while True:
         try:
+            q.put('time')
             tstart = time.time()
             real_time = datetime.datetime.now()
             station_list = [i for i in direction]
@@ -119,15 +120,20 @@ def listener(q):  # task to queue information into a manager dictionary
     listener is key to not disrupting the BART monitoring process.
     """
     while True:
+        lcd = vd.LCD()
         packet = q.get()
-        if callable(packet):
-            packet()
-        else:
-            lcd_disp = vd.LCD(packet, 8)
-            lcd_disp.train_detail()
-        vd.LCD(None, 0).lcd_time()
-        # led_disp = vd.LED(packet)
-        # led_disp.led_lights()
+        if packet == 'time':
+            lcd.lcd_init()
+            while True:
+                try:
+                    packet = q.get(False)
+                except:
+                    packet = None
+                lcd.lcd_time()
+                if isinstance(packet, dict):
+                    lcd.train_detail(packet, 8)
+                    # led_disp = vd.LED(packet)
+                    # led_disp.led_lights()
 
 
 def main():
@@ -140,10 +146,8 @@ def main():
     q = manager.Queue()
     pool = mp.Pool(2)  # two processes - one for checking time, one for blinking led
     watcher = pool.apply_async(listener, (q,))  # first process
-    start_up = vd.LCD(None, 0)
-    start_up.lcd_boot()
-    q.put(start_up.lcd_time)
-    print('pass here')
+    lcd = vd.LCD()
+    lcd.lcd_boot()
     direction = {'nbrk': ['North', 85], 'plza': ['South', 140]}
     job = pool.apply_async(monitor, (direction, q))  # second multiprocess
     job.get()
