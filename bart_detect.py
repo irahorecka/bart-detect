@@ -120,6 +120,7 @@ def listener(q):  # task to queue information into a manager dictionary
     """
     while True:
         packet = q.get()
+        print(packet)
         if callable(packet):
             packet()
         else:
