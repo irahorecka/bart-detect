@@ -67,10 +67,11 @@ def monitor(direction, q):
     temp_suspend = []
     time_delay = []
     time_comp = lambda x, y: (x.hour, x.minute, x.second) > (y.hour, y.minute, y.second)
+    q.put('start')
 
     while True:
         try:
-            q.put('time')
+            t0 = time.time()
             real_time = datetime.datetime.now()
             station_list = [i for i in direction]
             station_list.sort() # sort stations alphabetically
@@ -106,6 +107,11 @@ def monitor(direction, q):
                         time_delay.remove(sched)
             except IndexError:
                 pass
+            t1 = time.time()
+            if t1 - t0 > 1:
+                pass
+            else:
+                time.sleep(1 - (t1 - t0))
 
         except (RuntimeError, KeyError) as error:
             print("{}. Retrying...".format(error))
@@ -120,7 +126,7 @@ def listener(q):  # task to queue information into a manager dictionary
     lcd = vd.LCD()
     while True:
         packet = q.get()
-        if packet == 'time':
+        if packet == 'start':
             lcd.lcd_init()
             while True:
                 try:
