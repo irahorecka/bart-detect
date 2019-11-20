@@ -124,12 +124,7 @@ class LCD:
         Set LCD screen to display message upon
         boot.
         """
-<<<<<<< HEAD
         self.lcd_init()
-=======
-        self.lcd_byte(0x01, self.LCD_CMD)
-        time.sleep(0.1)
->>>>>>> 435991cd8cb0ab7d76aad7aec4d7fcfa6ef8b028
         self.lcd_string("Welcome to", self.LCD_LINE_1)
         self.lcd_string("BART_detect!", self.LCD_LINE_2)
         time.sleep(4)
@@ -140,7 +135,6 @@ class LCD:
         Set LCD screen to display current time
         during idle. 
         """
-<<<<<<< HEAD
         self.lcd_init()
         try:
             current_time = datetime.datetime.now()
@@ -153,24 +147,6 @@ class LCD:
             print(error)
         finally:
             self.lcd_blank()
-=======
-        try:
-            while True:
-                t0 = time.time()
-                current_time = datetime.datetime.now()
-                display_time = current_time.strftime('%I:%M:%S %p')
-                current_mo = self.month[current_time.strftime('%m')]
-                display_date = current_time.strftime('{} %d, %Y'.format(current_mo))
-                self.lcd_string(display_time, self.LCD_LINE_1)
-                self.lcd_string(display_date, self.LCD_LINE_2)
-                t1 = time.time()
-                time.sleep(1-(t1-t0)) # this process should not exceed 1 sec.
-        except Exception as error:
-            print(error)
-        finally:
-            self.lcd_byte(0x01, self.LCD_CMD)
-            time.sleep(0.5)
->>>>>>> 435991cd8cb0ab7d76aad7aec4d7fcfa6ef8b028
 
     def train_detail(self, packet, repetition):
         """
@@ -181,19 +157,10 @@ class LCD:
         Takes information as dictionary format
         (packet) with repetition count (type int).
         """
-<<<<<<< HEAD
         self.lcd_init()
         if not isinstance(repetition, int):
             raise TypeError("repetition must be set to an integer")
         try:
-=======
-        if not isinstance(repetition, int):
-            raise TypeError("repetition must be set to an integer")
-        self.lcd_init()
-        try:
-            self.lcd_byte(0x01, self.LCD_CMD)
-            time.sleep(0.5)
->>>>>>> 435991cd8cb0ab7d76aad7aec4d7fcfa6ef8b028
             no_cars = int(packet['car_number'])
             for i in range(repetition):
                 self.lcd_string("Approaching from", self.LCD_LINE_1)
@@ -206,9 +173,5 @@ class LCD:
         except Exception as error:
             print(error)
         finally:
-<<<<<<< HEAD
             self.lcd_blank()
-=======
-            self.lcd_byte(0x01, self.LCD_CMD)
->>>>>>> 435991cd8cb0ab7d76aad7aec4d7fcfa6ef8b028
             time.sleep(0.5)
