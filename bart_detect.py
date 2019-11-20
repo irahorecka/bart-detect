@@ -66,16 +66,16 @@ def monitor(direction, q, g):
     """
     temp_suspend = []
     time_delay = []
+    time_comp = lambda x, y: (x.hour, x.minute, x.second) > (y.hour, y.minute, y.second)
+
     while True:
         try:
             q.put('time')
-            tstart = time.time()
             real_time = datetime.datetime.now()
             station_list = [i for i in direction]
             station_list.sort() # sort stations alphabetically
             upcoming_trains = Scheduler(station_list).get_feed()
             queue_trains = []
-            time_comp = lambda x, y: (x.hour, x.minute, x.second) > (y.hour, y.minute, y.second)
 
             for station, details in upcoming_trains:
                 for item in details:
@@ -106,9 +106,7 @@ def monitor(direction, q, g):
                         time_delay.remove(sched)
             except IndexError:
                 pass
-            tend = time.time()
-            if 1-(tend-tstart) > 0:
-                time.sleep(1-(tend-tstart))
+
         except (RuntimeError, KeyError) as error:
             print("{}. Retrying...".format(error))
             time.sleep(5)

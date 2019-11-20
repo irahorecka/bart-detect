@@ -145,7 +145,6 @@ class LCD:
         except Exception as error:
             print(error)
 
-
     def train_detail(self, packet, repetition):
         """
         Function to trigger string sequence to
