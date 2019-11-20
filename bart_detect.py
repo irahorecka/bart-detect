@@ -56,7 +56,7 @@ class Scheduler:
         return [(station, LiveFeed(station).direction_info()) for station in self.stn_list]
 
 
-def monitor(direction, q):
+def monitor(direction, q, g):
     """
     A function to perform indefinite monitoring for upcoming
     trains. This function checks statuses of department trains
@@ -102,7 +102,7 @@ def monitor(direction, q):
                     if time_comp(real_time, sched[4]):
                         packet_queue = {'compass': sched[2], 'station': Station.train_stations[sched[0]],
                                         'train_line': sched[1], 'car_number': sched[3]}
-                        q.put(packet_queue)
+                        q.put(packet_queue, g)
                         time_delay.remove(sched)
             except IndexError:
                 pass
@@ -144,12 +144,13 @@ def main():
     os.chdir(BASE_DIR)
     manager = mp.Manager()
     q = manager.Queue()
-    pool = mp.Pool(2)  # two processes - one for checking time, one for blinking led
+    g = manager.Queue()
+    pool = mp.Pool(3)
     watcher = pool.apply_async(listener, (q,))  # first process
     lcd = vd.LCD()
     lcd.lcd_boot()
     direction = {'nbrk': ['North', 85], 'plza': ['South', 140]}
-    job = pool.apply_async(monitor, (direction, q))  # second multiprocess
+    job = pool.apply_async(monitor, (direction, q, g))  # second multiprocess
     job.get()
     pool.close()
     pool.join()
