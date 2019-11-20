@@ -56,7 +56,7 @@ class Scheduler:
         return [(station, LiveFeed(station).direction_info()) for station in self.stn_list]
 
 
-def monitor(direction, q, g):
+def monitor(direction, q):
     """
     A function to perform indefinite monitoring for upcoming
     trains. This function checks statuses of department trains
@@ -102,7 +102,7 @@ def monitor(direction, q, g):
                     if time_comp(real_time, sched[4]):
                         packet_queue = {'compass': sched[2], 'station': Station.train_stations[sched[0]],
                                         'train_line': sched[1], 'car_number': sched[3]}
-                        q.put(packet_queue, g)
+                        q.put(packet_queue)
                         time_delay.remove(sched)
             except IndexError:
                 pass
@@ -117,8 +117,8 @@ def listener(q):  # task to queue information into a manager dictionary
     Monitors incoming requests to trigger LED. This multiprocess
     listener is key to not disrupting the BART monitoring process.
     """
+    lcd = vd.LCD()
     while True:
-        lcd = vd.LCD()
         packet = q.get()
         if packet == 'time':
             lcd.lcd_init()
@@ -130,7 +130,7 @@ def listener(q):  # task to queue information into a manager dictionary
                 lcd.lcd_time()
                 if isinstance(packet, dict):
                     time.sleep(0.5)
-                    lcd.train_detail(packet, 8)
+                    lcd.train_detail(packet, 6)
                     time.sleep(0.5)
                     # led_disp = vd.LED(packet)
                     # led_disp.led_lights()
@@ -144,14 +144,13 @@ def main():
     os.chdir(BASE_DIR)
     manager = mp.Manager()
     q = manager.Queue()
-    g = manager.Queue()
     pool = mp.Pool(3)
     watcher = pool.apply_async(listener, (q,))  # first process
     lcd = vd.LCD()
     lcd.lcd_boot()
     time.sleep(0.5)
     direction = {'nbrk': ['North', 85], 'plza': ['South', 140]}
-    job = pool.apply_async(monitor, (direction, q, g))  # second multiprocess
+    job = pool.apply_async(monitor, (direction, q))  # second multiprocess
     job.get()
     pool.close()
     pool.join()

@@ -71,9 +71,6 @@ class LCD:
              '5': 'May', '6': 'Jun', '7': 'Jul', '8': 'Aug',
              '9': 'Sept', '10': 'Oct', '11': 'Nov', '12': 'Dec'}
 
-    def __init__(self):
-        pass
-
     def lcd_init(self):
         """Initialise display"""
         self.lcd_byte(0x33, self.LCD_CMD) # 110011 Initialise
@@ -124,11 +121,15 @@ class LCD:
         Set LCD screen to display message upon
         boot.
         """
-        self.lcd_init()
-        self.lcd_string("Welcome to", self.LCD_LINE_1)
-        self.lcd_string("BART_detect!", self.LCD_LINE_2)
-        time.sleep(4)
-        self.lcd_blank()
+        try:
+            self.lcd_init()
+            self.lcd_string("Welcome to", self.LCD_LINE_1)
+            self.lcd_string("BART_detect!", self.LCD_LINE_2)
+            time.sleep(4)
+            self.lcd_blank()
+        except Exception as error:
+            print(error)
+            self.lcd_blank()
 
     def lcd_time(self):
         """
@@ -144,6 +145,7 @@ class LCD:
             self.lcd_string(display_date, self.LCD_LINE_2)
         except Exception as error:
             print(error)
+            self.lcd_blank()
 
     def train_detail(self, packet, repetition):
         """
