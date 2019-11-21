@@ -32,7 +32,7 @@ class LiveFeed:
     def __init__(self, station):
         self.station = station
 
-    @timeout.timeout(10) #timeout connection after 10 seconds
+    @timeout.timeout(5)  # timeout connection after 5 seconds of inactivity
     def direction_info(self):
         """
         Acquire live API information for
@@ -76,7 +76,7 @@ def monitor(direction, q):
             t0 = time.time()
             real_time = datetime.datetime.now()
             station_list = [i for i in direction]
-            station_list.sort() # sort stations alphabetically
+            station_list.sort()  # sort stations alphabetically
             upcoming_trains = Scheduler(station_list).get_feed()
             queue_trains = []
 
@@ -109,8 +109,7 @@ def monitor(direction, q):
                         time_delay.remove(sched)
             except IndexError:
                 pass
-        except (RuntimeError, KeyError, timeout.TimeoutError) as error:
-            print("{}. Retrying...".format(error))
+        except (RuntimeError, KeyError, timeout.TimeoutError):
             time.sleep(1)
         finally:
             t1 = time.time()
