@@ -58,65 +58,109 @@ class Scheduler:
         return [(station, LiveFeed(station).direction_info()) for station in self.stn_list]
 
 
-def monitor(direction, q):
+class Monitor:
     """
-    A function to perform indefinite monitoring for upcoming
-    trains. This function checks statuses of department trains
-    through the BART API, and if a train is leaving, it will
-    add an appropriate delay and transmit the information to
-    the listener func.
+    Workhorse of the script. Query for live BART
+    data, monitor time, and deploy message when
+    train approaches house.
     """
-    temp_suspend = []
-    time_delay = []
-    time_comp = lambda x, y: (x.hour, x.minute, x.second) > (y.hour, y.minute, y.second)
-    q.put('start')
+    def __init__(self, direction):
+        self.direction = direction
+        self.temp_suspend = []
+        self.time_delay = []
 
-    while True:
+    def queue_sched(self, upcoming_trains):
+        """
+        Add schedules of trains that match stations
+        inputted in main()
+        """
+        queue_trains = []
+        for station, details in upcoming_trains:
+            for item in details:
+                for estimate in item['estimate']:
+                    if estimate['direction'] == self.direction[station][0]:
+                        queue_trains.append((station, item['destination'], estimate))
+                        break
+        return queue_trains
+
+    def find_trains(self, queue_trains, real_time):
+        """
+        Find trains when they leave the station and
+        queue them for deployment as they approach
+        the house.
+        """
+        for station, destination, train in queue_trains:
+            train_key = (train['color'], train['direction'], train['length'])
+            _exit = 0
+            if self.temp_suspend:
+                for detail, _time in self.temp_suspend:
+                    if time_comp(real_time, _time):
+                        self.temp_suspend.remove((detail, _time))
+                    if train_key == detail:
+                        _exit = 1
+            if _exit == 1:
+                continue
+            if train['minutes'] == 'Leaving':
+                self.time_delay.append((station, destination, train['direction'],
+                                        train['length'], real_time +
+                                        datetime.timedelta(0, self.direction[station][1])))
+                self.temp_suspend.append((train_key,
+                                          real_time + datetime.timedelta(0, 120)))
+
+    def send_to_queue(self, real_time, q):
+        """
+        If train is approaching the house, send
+        train information to listener func to
+        deploy user notification.
+        """
         try:
-            t0 = time.time()
-            real_time = datetime.datetime.now()
-            station_list = [i for i in direction]
-            station_list.sort()  # sort stations alphabetically
-            upcoming_trains = Scheduler(station_list).get_feed()
-            queue_trains = []
+            for sched in self.time_delay:
+                if time_comp(real_time, sched[4]):
+                    packet_queue = {'compass': sched[2],
+                                    'station': Station.train_stations[sched[0]],
+                                    'train_line': sched[1],
+                                    'car_number': sched[3]
+                                    }
+                    q.put(packet_queue)
+                    self.time_delay.remove(sched)
+        except IndexError:
+            pass
 
-            for station, details in upcoming_trains:
-                for item in details:
-                    for estimate in item['estimate']:
-                        if estimate['direction'] == direction[station][0]:
-                            queue_trains.append((station, item['destination'], estimate))
-                            break
-            for station, destination, train in queue_trains:
-                _exit = 0
-                if temp_suspend:
-                    for detail, _time in temp_suspend:
-                        if time_comp(real_time, _time):
-                            temp_suspend.remove((detail, _time))
-                        elif train == detail:
-                            _exit = 1
-                if _exit == 1:
-                    continue
-                if train['minutes'] == 'Leaving':
-                    time_delay.append((station, destination, train['direction'], train['length'], real_time +
-                                       datetime.timedelta(0, direction[station][1])))
-                    temp_suspend.append((train, real_time + datetime.timedelta(0, 120)))
+    def monitor_indef(self, q):
+        """
+        Master of the class - continuously scan
+        for leaving trains from stations designated
+        in main().
+        """
+        while True:
             try:
-                for sched in time_delay:
-                    if time_comp(real_time, sched[4]):
-                        packet_queue = {'compass': sched[2], 'station': Station.train_stations[sched[0]],
-                                        'train_line': sched[1], 'car_number': sched[3]}
-                        q.put(packet_queue)
-                        time_delay.remove(sched)
-            except IndexError:
-                pass
-        except (RuntimeError, KeyError, timeout.TimeoutError):
-            time.sleep(1)
-        finally:
-            t1 = time.time()
-            if t1 - t0 > 1:
-                pass
-            else:
-                time.sleep(1 - (t1 - t0))
+                t0 = time.time()
+                real_time = datetime.datetime.now()
+                station_list = [i for i in self.direction]
+                station_list.sort()  # sort stations alphabetically
+                upcoming_trains = Scheduler(station_list).get_feed()
+
+                queue_train = self.queue_sched(upcoming_trains)
+                self.find_trains(queue_train, real_time)
+                self.send_to_queue(real_time, q)
+            except (RuntimeError, KeyError, timeout.TimeoutError):
+                time.sleep(1)
+            finally:
+                t1 = time.time()
+                if t1 - t0 > 1:
+                    pass
+                else:
+                    time.sleep(1 - (t1 - t0))
+
+
+def time_comp(input_time, real_time):
+    """
+    Function to compare input time (input_time)
+    to current time (real_time)
+    """
+    x = input_time
+    y = real_time
+    return (x.hour, x.minute, x.second) > (y.hour, y.minute, y.second)
 
 
 def listener(q):  # task to queue information into a manager dictionary
@@ -149,15 +193,17 @@ def main():
     Start process when application is run.
     """
     os.chdir(BASE_DIR)
-    manager = mp.Manager()
-    q = manager.Queue()
-    pool = mp.Pool(2)
-    watcher = pool.apply_async(listener, (q,))  # first process
     lcd = vd.LCD()
     lcd.lcd_boot()
     time.sleep(0.5)
+
+    manager = mp.Manager()
+    q = manager.Queue()
+    pool = mp.Pool(2)
     direction = {'nbrk': ['North', 85], 'plza': ['South', 140]}
-    job = pool.apply_async(monitor, (direction, q))  # second multiprocess
+    start_app = Monitor(direction)
+    watcher = pool.apply_async(listener, (q,))  # first process
+    job = pool.apply_async(start_app.monitor_indef, (q,))  # second multiprocess
     job.get()
     pool.close()
     pool.join()
