@@ -132,6 +132,7 @@ class Monitor:
         for leaving trains from stations designated
         in main().
         """
+        q.put('start')
         while True:
             try:
                 t0 = time.time()
