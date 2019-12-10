@@ -66,7 +66,7 @@ class Monitor:
     """
     def __init__(self, direction):
         self.direction = direction
-        self.temp_suspend = []
+        self.temp_suspend = {}
         self.time_delay = []
 
     def queue_sched(self, upcoming_trains):
@@ -83,31 +83,42 @@ class Monitor:
                         break
         return queue_trains
 
-    def find_trains(self, queue_trains, real_time):
+    def find_trains(self, queue_trains):
         """
         Find trains when they leave the station and
         queue them for deployment as they approach
         the house.
         """
         for station, destination, train in queue_trains:
-            train_key = (train['color'], train['direction'], train['length'])
-            _exit = 0
-            if self.temp_suspend:
-                for detail, _time in self.temp_suspend:
-                    if time_comp(real_time, _time):
-                        self.temp_suspend.remove((detail, _time))
-                    if train_key == detail:
-                        _exit = 1
-            if _exit == 1:
-                continue
             if train['minutes'] == 'Leaving':
-                self.time_delay.append((station, destination, train['direction'],
-                                        train['length'], real_time +
-                                        datetime.timedelta(0, self.direction[station][1])))
-                self.temp_suspend.append((train_key,
-                                          real_time + datetime.timedelta(0, 120)))
+                train_key = "{}_{}_{}".format(
+                    train['color'], train['direction'], train['length']
+                    )
+                if not self.handle_suspended_trains(train_key):
+                    continue
 
-    def send_to_queue(self, real_time, q):
+                queued_train_information = (station, destination, train['direction'],
+                                            train['length'], datetime.datetime.now() +
+                                            datetime.timedelta(0, self.direction[station][1]))
+                self.time_delay.append(queued_train_information)
+
+    def handle_suspended_trains(self, station_key):
+        self.rem_overly_suspended_trains()  # remove suspended train if passed time limit
+        if station_key in self.temp_suspend:
+            return 0
+        # introduce 180 sec latency prior to station_train_key removal
+        self.temp_suspend[station_key] = datetime.datetime.now() + datetime.timedelta(0, 180)
+        return 1
+
+    def rem_overly_suspended_trains(self):
+        remove_key_list = []
+        for station_train, time_val in self.temp_suspend.items():
+            if datetime.datetime.now() > time_val:
+                remove_key_list.append(station_train)
+        for rem_station_train in remove_key_list:
+            del self.temp_suspend[rem_station_train]
+
+    def send_to_queue(self, q):
         """
         If train is approaching the house, send
         train information to listener func to
@@ -115,7 +126,7 @@ class Monitor:
         """
         try:
             for sched in self.time_delay:
-                if time_comp(real_time, sched[4]):
+                if datetime.datetime.now() > sched[4]:
                     packet_queue = {'compass': sched[2],
                                     'station': Station.train_stations[sched[0]],
                                     'train_line': sched[1],
@@ -136,14 +147,13 @@ class Monitor:
         while True:
             try:
                 t0 = time.time()
-                real_time = datetime.datetime.now()
                 station_list = [i for i in self.direction]
                 station_list.sort()  # sort stations alphabetically
                 upcoming_trains = Scheduler(station_list).get_feed()
 
                 queue_train = self.queue_sched(upcoming_trains)
-                self.find_trains(queue_train, real_time)
-                self.send_to_queue(real_time, q)
+                self.find_trains(queue_train)
+                self.send_to_queue(q)
             except (RuntimeError, KeyError, timeout.TimeoutError):
                 time.sleep(1)
             finally:
@@ -152,16 +162,6 @@ class Monitor:
                     pass
                 else:
                     time.sleep(1 - (t1 - t0))
-
-
-def time_comp(input_time, real_time):
-    """
-    Function to compare input time (input_time)
-    to current time (real_time)
-    """
-    x = input_time
-    y = real_time
-    return (x.hour, x.minute, x.second) > (y.hour, y.minute, y.second)
 
 
 def listener(q):  # task to queue information into a manager dictionary
@@ -203,7 +203,7 @@ def main():
     pool = mp.Pool(2)
     direction = {'nbrk': ['North', 85], 'plza': ['South', 140]}
     start_app = Monitor(direction)
-    watcher = pool.apply_async(listener, (q,))  # first process
+    watcher = pool.apply_async(listener, (q,))  # first multiprocess
     job = pool.apply_async(start_app.monitor_indef, (q,))  # second multiprocess
     job.get()
     pool.close()
