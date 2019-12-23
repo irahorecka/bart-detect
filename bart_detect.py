@@ -103,6 +103,10 @@ class Monitor:
                 self.time_delay.append(queued_train_information)
 
     def handle_suspended_trains(self, station_key):
+        """
+        Check if 'Leaving' train is suspended.
+        If not, add train to suspension dictionary.
+        """
         self.rem_overly_suspended_trains()  # remove suspended train if passed time limit
         if station_key in self.temp_suspend:
             return 0
@@ -111,6 +115,11 @@ class Monitor:
         return 1
 
     def rem_overly_suspended_trains(self):
+        """
+        Remove overly suspended train if
+        current time is greater than its suspended
+        timepoint.
+        """
         remove_key_list = []
         for station_train, time_val in self.temp_suspend.items():
             if datetime.datetime.now() > time_val:
@@ -201,7 +210,7 @@ def main():
     manager = mp.Manager()
     q = manager.Queue()
     pool = mp.Pool(2)
-    direction = {'nbrk': ['North', 85], 'plza': ['South', 140]}
+    direction = {'nbrk': ['North', 85], 'plza': ['South', 145]}
     start_app = Monitor(direction)
     watcher = pool.apply_async(listener, (q,))  # first multiprocess
     job = pool.apply_async(start_app.monitor_indef, (q,))  # second multiprocess
