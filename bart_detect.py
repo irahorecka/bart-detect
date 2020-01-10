@@ -210,7 +210,7 @@ def main():
     manager = mp.Manager()
     q = manager.Queue()
     pool = mp.Pool(2)
-    direction = {'nbrk': ['North', 85], 'plza': ['South', 145]}
+    direction = {'nbrk': ['North', 85], 'plza': ['South', 142]}
     start_app = Monitor(direction)
     watcher = pool.apply_async(listener, (q,))  # first multiprocess
     job = pool.apply_async(start_app.monitor_indef, (q,))  # second multiprocess
