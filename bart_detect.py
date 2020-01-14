@@ -32,6 +32,9 @@ class LiveFeed:
     def __init__(self, station):
         self.station = station
 
+    def __repr__(self):
+        return "self.__class__.__name__({self.station})".format(self=self)
+
     @timeout.timeout(5)  # timeout connection after 5 seconds of inactivity
     def direction_info(self):
         """
@@ -49,6 +52,9 @@ class Scheduler:
     """
     def __init__(self, station_list):
         self.stn_list = station_list
+
+    def __repr__(self):
+        return "self.__class__.__name__({self.stn_list})".format(self=self)
 
     def get_feed(self):
         """
@@ -68,6 +74,9 @@ class Monitor:
         self.direction = direction
         self.temp_suspend = {}
         self.time_delay = []
+
+    def __repr__(self):
+        return "self.__class__.__name__({self.direction})".format(self=self)
 
     def queue_sched(self, upcoming_trains):
         """

@@ -19,6 +19,9 @@ class LED:
         gpio.setmode(gpio.BCM)
         gpio.setwarnings(False)
 
+    def __repr__(self):
+        return "self.__class__.__name__({self.packet})".format(self=self)
+
     def led_lights(self):
         """
         A function to start LED sequence.
