@@ -1,4 +1,4 @@
-# BART_detect
+# bart-detect
 The Richmond BART line is 10 yards from my window, and it is loud. This is a simple python script to detect when BART is approaching my house.<br>
 
 The setup is currently running on **Raspberry Pi 3 Model B+** using **Python 3.5**. The Pi is connected to a simple breadboard with four red LED lights. The LED lights blink in the direction of the approaching train (north or south).<br>
