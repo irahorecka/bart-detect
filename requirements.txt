@@ -9,7 +9,7 @@ pybart==1.5.1
 pycodestyle==2.5.0
 pyflakes==2.1.1
 pygame==1.9.6
-pylint==2.4.3
+pylint==4.0.9
 python-dateutil==2.8.1
 pytz==2019.3
 six==1.13.0
